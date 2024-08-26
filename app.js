@@ -11,6 +11,11 @@ var apiRouter = require('./app_api/routes/index');
 
 var handlebars = require('hbs');
 
+require('dotenv').config();
+
+var passport = require('passport');
+require('./app_api/config/passport');
+
 require('./app_api/models/db');
 
 var app = express();
@@ -27,6 +32,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(passport.initialize());
 
 //enable CORS
 app.use('/api', (req, res, next) => {
@@ -56,5 +62,14 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error');
 });
+
+// Catch unauthorized error and create 401
+app.use((err, req, res, next) => {
+  if(err.name === 'UnauthorizedError') {
+  res
+  .status(401)
+  .json({"message": err.name + ": " + err.message});
+  }
+  });
 
 module.exports = app;
